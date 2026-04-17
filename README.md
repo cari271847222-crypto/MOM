@@ -2,38 +2,38 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>母親節團隊競賽 · 限動起承轉合+2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>母親節團隊競賽 · 手機版</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Helvetica Neue', 'Noto Sans', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', 'Noto Sans', sans-serif;
         }
 
         body {
             background: linear-gradient(145deg, #fff9f0 0%, #ffe6d5 100%);
             min-height: 100vh;
-            padding: 20px 16px 60px;
+            padding: 16px 12px 40px;
         }
 
         .container {
-            max-width: 1500px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
-        /* 頂部比分條 - 柔和淺色 */
+        /* 頂部比分條 */
         .score-bar {
             background: linear-gradient(135deg, #ffe9e0, #ffd9c8);
-            border-radius: 60px;
-            padding: 14px 24px;
-            margin-bottom: 20px;
+            border-radius: 40px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
             color: #7b4a38;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border: 1px solid #ffcdb3;
@@ -41,142 +41,135 @@
         .team-score-compact {
             display: flex;
             align-items: baseline;
-            gap: 20px;
+            gap: 12px;
             background: rgba(255,245,235,0.7);
-            padding: 6px 20px;
-            border-radius: 48px;
+            padding: 4px 16px;
+            border-radius: 40px;
         }
         .team-compact {
             text-align: center;
         }
         .team-compact .name {
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             color: #b45f48;
         }
         .team-compact .points {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 800;
             line-height: 1;
             color: #c25b3c;
         }
         .vs {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: bold;
-            margin: 0 6px;
+            margin: 0 4px;
             color: #cc886e;
         }
         .leader-info {
             background: #fff2e8;
-            padding: 6px 18px;
-            border-radius: 40px;
+            padding: 4px 12px;
+            border-radius: 30px;
             color: #a35134;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             box-shadow: inset 0 0 0 1px #ffe0ce;
         }
 
-        /* 倒數計時區 */
+        /* 倒數計時 */
         .countdown-area {
             background: #fff3ea;
-            border-radius: 60px;
-            padding: 12px 24px;
-            margin-bottom: 20px;
+            border-radius: 40px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
             text-align: center;
             border: 1px solid #ffd5be;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
         .countdown-title {
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 600;
             color: #c47a5e;
-            letter-spacing: 1px;
         }
         .countdown-number {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #dc6b4a;
             line-height: 1.2;
         }
         .countdown-sub {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             color: #b28b78;
         }
 
         .hero {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .hero h1 {
-            font-size: 2rem;
+            font-size: 1.6rem;
             color: #b3413a;
-            text-shadow: 2px 2px 0 #ffd9c5;
+            text-shadow: 1px 1px 0 #ffd9c5;
         }
         .sub {
             color: #b97f6e;
             background: #fff4e6;
             display: inline-block;
-            padding: 5px 18px;
-            border-radius: 40px;
-            font-size: 0.85rem;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
         }
 
         /* 加分工具列 */
         .action-bar {
             background: #fff8f0;
-            border-radius: 60px;
-            padding: 16px 24px;
-            margin: 20px 0 32px;
+            border-radius: 40px;
+            padding: 12px 16px;
+            margin: 16px 0 24px;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             border: 1px solid #ffddcc;
         }
         .action-btn {
             background: #ffede3;
             border: none;
-            padding: 10px 20px;
-            border-radius: 48px;
-            font-weight: 700;
-            font-size: 0.9rem;
+            padding: 8px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
             color: #b14534;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .action-btn:hover {
-            background: #ffd5be;
-            transform: translateY(-2px);
+            flex: 0 0 auto;
         }
         .action-btn.special {
             background: #ffe0cf;
             color: #c25a3e;
         }
 
+        /* 團隊卡片 */
         .teams-grid {
             display: flex;
-            flex-wrap: wrap;
-            gap: 28px;
-            margin-bottom: 48px;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 32px;
         }
         .team-card {
-            flex: 1;
-            min-width: 340px;
             background: white;
-            border-radius: 48px;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+            border-radius: 40px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             overflow: hidden;
             border: 1px solid #ffd5be;
         }
         .team-header {
-            padding: 20px 24px 12px;
+            padding: 16px 18px 10px;
             background: #fff7f0;
-            border-bottom: 3px solid #ffbe9f;
+            border-bottom: 2px solid #ffbe9f;
         }
         .team-name-input {
-            font-size: 1.7rem;
+            font-size: 1.4rem;
             font-weight: 800;
             background: transparent;
             border: none;
@@ -184,25 +177,21 @@
             padding: 4px 0;
             color: #772e26;
         }
-        .team-name-input:focus {
-            outline: none;
-            border-bottom: 2px dashed #ff8a5c;
-        }
         .punish-area {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             background: #ffefe3;
-            padding: 8px 12px;
-            border-radius: 32px;
+            padding: 6px 10px;
+            border-radius: 30px;
         }
         .punish-label {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-weight: bold;
             background: #e7b89c;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 30px;
             color: white;
         }
@@ -210,24 +199,28 @@
             flex: 1;
             border: none;
             background: transparent;
-            padding: 6px 0;
-            font-size: 0.85rem;
+            padding: 4px 0;
+            font-size: 0.75rem;
             color: #8b4b3a;
         }
 
         .team-score {
-            padding: 16px 24px;
+            padding: 12px 20px;
             background: #fff3ea;
             text-align: center;
         }
         .score-number {
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             font-weight: 800;
             color: #dc6b4a;
         }
+        .team-score > div:last-child {
+            font-size: 0.7rem;
+            color: #b27b62;
+        }
 
         .members-section {
-            padding: 18px 20px;
+            padding: 14px 16px;
             background: #fffaf5;
             border-top: 1px solid #ffe2d0;
             border-bottom: 1px solid #ffe2d0;
@@ -235,35 +228,31 @@
         .members-title {
             font-weight: 700;
             color: #c47a5e;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
         }
         .member-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
         .member-chip {
             background: #fff1e8;
-            border-radius: 40px;
-            padding: 6px 14px;
+            border-radius: 30px;
+            padding: 5px 12px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 6px;
+            font-size: 0.75rem;
             font-weight: 500;
             color: #7b3d2c;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .member-today-score {
             background: #ecc7b6;
             border-radius: 30px;
-            padding: 2px 10px;
-            font-size: 0.7rem;
+            padding: 2px 8px;
+            font-size: 0.6rem;
             font-weight: bold;
         }
         .delete-member {
@@ -272,131 +261,176 @@
             cursor: pointer;
             color: #c27e64;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.9rem;
             margin-left: 4px;
         }
         .add-member-form {
             display: flex;
             gap: 8px;
-            margin-top: 12px;
+            margin-top: 8px;
             background: #fff0e6;
-            padding: 12px 12px;
-            border-radius: 60px;
+            padding: 8px 12px;
+            border-radius: 50px;
         }
         .add-member-input {
             flex: 1;
             border: 1px solid #ffcfb5;
-            border-radius: 60px;
-            padding: 10px 16px;
+            border-radius: 50px;
+            padding: 8px 12px;
             background: white;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         .add-member-btn {
             background: #e07a5f;
             border: none;
-            border-radius: 60px;
-            padding: 8px 20px;
+            border-radius: 50px;
+            padding: 6px 16px;
             font-weight: bold;
             color: white;
             cursor: pointer;
-            transition: 0.2s;
-        }
-        .add-member-btn:hover {
-            background: #c05e44;
+            font-size: 0.75rem;
         }
 
-        /* 備用表單 */
+        /* 表單 - 團隊按鈕直接顯示隊名 */
         .form-panel {
             background: white;
-            border-radius: 48px;
-            padding: 24px;
-            margin-bottom: 48px;
+            border-radius: 40px;
+            padding: 18px;
+            margin-bottom: 32px;
             border: 1px solid #ffddcc;
         }
         .form-title {
             font-weight: bold;
             margin-bottom: 16px;
             color: #b54733;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .team-toggle {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .team-btn {
+            background: #ffede3;
+            border: 1px solid #ffcdb5;
+            padding: 12px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #b14534;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .team-btn.active {
+            background: #e07a5f;
+            color: white;
+            border-color: #e07a5f;
+            box-shadow: 0 2px 8px rgba(224,122,95,0.3);
         }
         .form-grid {
             display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: flex-end;
+            flex-direction: column;
+            gap: 12px;
         }
         .input-group {
-            flex: 1;
-            min-width: 150px;
+            width: 100%;
         }
         .input-group label {
             font-size: 0.7rem;
             font-weight: 600;
             color: #c27156;
+            display: block;
+            margin-bottom: 4px;
         }
         select, input {
             width: 100%;
             padding: 10px 14px;
-            border-radius: 48px;
+            border-radius: 40px;
             border: 1.5px solid #ffd5be;
             background: #fffcf8;
+            font-size: 0.85rem;
         }
         .btn-primary {
             background: #e07a5f;
             border: none;
-            padding: 10px 24px;
-            border-radius: 48px;
+            padding: 12px;
+            border-radius: 40px;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            width: 100%;
+            font-size: 0.9rem;
+            margin-top: 8px;
         }
         .rule-hint {
             background: #fff2e6;
             border-radius: 28px;
-            padding: 10px 16px;
+            padding: 8px 12px;
             margin-top: 16px;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
         }
+
+        /* 紀錄表格 */
         .log-section {
             background: #fffef7;
-            border-radius: 48px;
-            padding: 20px;
+            border-radius: 40px;
+            padding: 16px;
         }
         .log-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+        }
+        .log-header h3 {
+            font-size: 1rem;
+            color: #b54733;
+        }
+        .reset-btn {
+            background: #ffdad0;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 500px;
         }
         th, td {
             text-align: left;
             padding: 10px 6px;
             border-bottom: 1px solid #ffdfcf;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
         }
         .delete-log {
             background: none;
             border: none;
             cursor: pointer;
             color: #e6947a;
+            font-size: 1rem;
         }
         .footer-note {
             text-align: center;
-            margin-top: 28px;
-            font-size: 0.7rem;
+            margin-top: 24px;
+            font-size: 0.6rem;
             color: #b28b78;
         }
-        @media (max-width: 780px) {
-            .teams-grid { flex-direction: column; }
-            .score-bar { flex-direction: column; align-items: stretch; text-align: center; }
-            .action-bar { justify-content: center; }
-            .countdown-number { font-size: 1.5rem; }
+        button:active {
+            transform: scale(0.97);
         }
     </style>
 </head>
@@ -417,41 +451,38 @@
         <div class="sub">🏆 贏家3000元 · 輸家自我懲罰</div>
     </div>
 
-    <!-- 加分工具列（新增「起承轉合+2」） -->
+    <!-- 加分工具列 -->
     <div class="action-bar">
-        <button class="action-btn" data-type="1">① 發限動 (置入產品) +1</button>
-        <button class="action-btn" data-type="2">② 限動起承轉合 +2</button>
-        <button class="action-btn" data-type="3">③ 有人詢問 +3</button>
-        <button class="action-btn" data-type="4">④ 成交 +4</button>
-        <button class="action-btn" data-type="5">⑤ 發Reels +5</button>
-        <button class="action-btn special" data-type="6">⑥ 全組都有發 +6</button>
-        <button class="action-btn" data-type="7">⑦ 提供素材 +7</button>
+        <button class="action-btn" data-type="1">①限動+1</button>
+        <button class="action-btn" data-type="2">②起承轉合+2</button>
+        <button class="action-btn" data-type="3">③詢問+3</button>
+        <button class="action-btn" data-type="4">④成交+4</button>
+        <button class="action-btn" data-type="5">⑤Reels+5</button>
+        <button class="action-btn special" data-type="6">⑥全組+6</button>
+        <button class="action-btn" data-type="7">⑦素材+7</button>
     </div>
 
     <div class="teams-grid" id="teamsGrid"></div>
 
-    <!-- 備用管理員表單 -->
+    <!-- 詳細加分表單 - 團隊按鈕直接顯示隊名 -->
     <div class="form-panel">
-        <div class="form-title">📋 詳細加分表單 (備用)</div>
+        <div class="form-title">📋 詳細加分表單</div>
+        <div class="team-toggle" id="teamToggle">
+            <div class="team-btn" data-team-val="A" id="teamABtn">愛心媽咪隊</div>
+            <div class="team-btn" data-team-val="B" id="teamBBtn">甜心寶貝隊</div>
+        </div>
         <div class="form-grid">
             <div class="input-group">
-                <label>團隊</label>
-                <select id="teamSelectForm">
-                    <option value="A">左隊</option>
-                    <option value="B">右隊</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>成員</label>
+                <label>👤 成員</label>
                 <select id="memberSelectForm">
                     <option value="">-- 請選擇 --</option>
                 </select>
             </div>
             <div class="input-group">
-                <label>加分項目</label>
+                <label>🎯 加分項目</label>
                 <select id="actionTypeForm">
-                    <option value="1">① 發限動 (置入產品) +1 (每日限1次)</option>
-                    <option value="2">② 限動起承轉合 +2 (每日限1次，與①擇一)</option>
+                    <option value="1">① 發限動 (置入產品) +1 (每日限1)</option>
+                    <option value="2">② 限動起承轉合 +2</option>
                     <option value="3">③ 有人詢問 +3</option>
                     <option value="4">④ 成交 +4</option>
                     <option value="5">⑤ 發Reels +5</option>
@@ -459,30 +490,28 @@
                     <option value="7">⑦ 分享素材 +7</option>
                 </select>
             </div>
-            <div class="input-group">
-                <button class="btn-primary" id="addRecordBtn">✨ 新增加分</button>
-            </div>
+            <button class="btn-primary" id="addRecordBtn">✨ 新增加分</button>
         </div>
         <div class="rule-hint">
-            <span>📌 ① & ② 每人每日僅能擇一獲得 (限動相關)</span>
-            <span>👥 ⑥ 全組加分不需選成員</span>
-            <span>📊 隊員今日貢獻顯示在名字旁</span>
+            <span>📌 ①&② 每人每日擇一</span>
+            <span>👥 ⑥ 全組加分</span>
+            <span>📊 今日貢獻即時顯示</span>
         </div>
     </div>
 
     <div class="log-section">
         <div class="log-header">
             <h3>📋 近期加分紀錄</h3>
-            <button class="btn-sm" id="resetAllDataBtn" style="background:#ffdad0; border:none; padding:6px 16px; border-radius:40px;">🗑️ 重置全部</button>
+            <button class="reset-btn" id="resetAllDataBtn">🗑️ 重置全部</button>
         </div>
-        <div style="overflow-x: auto;">
+        <div class="table-wrapper">
             <table>
-                <thead><tr><th>時間</th><th>團隊</th><th>成員</th><th>項目</th><th>分數</th><th></th></thead>
+                <thead><tr><th>時間</th><th>團隊</th><th>成員</th><th>項目</th><th>分數</th><th></th></tr></thead>
                 <tbody id="logBody"></tbody>
             </table>
         </div>
     </div>
-    <div class="footer-note">✨ 點擊隊員旁的「✖」可刪除隊員 | 團隊名稱/懲罰可直接點擊修改 | 所有資料自動儲存</div>
+    <div class="footer-note">✨ 點擊隊員✖可刪除 | 團隊名稱/懲罰可直接修改 | 資料自動儲存</div>
 </div>
 
 <script>
@@ -495,29 +524,20 @@
         logs: []
     };
 
-    // 倒數計時目標日期 (2026/5/11 23:59:59)
     const END_DATE = new Date(2026, 4, 11, 23, 59, 59);
-
     function updateCountdown() {
         const now = new Date();
         const diffMs = END_DATE - now;
         const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        const countdownEl = document.getElementById('countdownNumber');
-        if (!countdownEl) return;
-        if (diffMs <= 0) {
-            countdownEl.innerText = "比賽已結束";
-        } else {
-            countdownEl.innerText = `${diffDays} 天`;
-        }
+        const el = document.getElementById('countdownNumber');
+        if (el) el.innerText = diffMs <= 0 ? "比賽已結束" : `${diffDays} 天`;
     }
     setInterval(updateCountdown, 1000);
 
     function saveToLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); }
     function loadFromLocal() {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            try { const p = JSON.parse(raw); if (p.teams && p.logs) appData = p; } catch(e) {}
-        }
+        if (raw) try { const p = JSON.parse(raw); if (p.teams && p.logs) appData = p; } catch(e) {}
         if (!appData.teams) appData.teams = { A: { name: "愛心媽咪隊", punish: "輸家請喝珍奶", members: ["小美","阿華","小莉"] }, B: { name: "甜心寶貝隊", punish: "輸家跳舞影片", members: ["大雄","靜香","胖虎"] } };
         if (!appData.teams.A.members) appData.teams.A.members = ["小美","阿華","小莉"];
         if (!appData.teams.B.members) appData.teams.B.members = ["大雄","靜香","胖虎"];
@@ -525,16 +545,10 @@
         saveToLocal();
     }
     function getTodayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-
-    // 檢查同一人今天是否已經有過限動相關加分 (type 1 或 2)
     function hasTodayLimitStory(team, member, today) {
         return appData.logs.some(l => l.team === team && l.member === member && l.date === today && (l.type === 1 || l.type === 2));
     }
-
-    function hasTodayTeamBonus6(team, today) { // 原 type 5 變成 type 6 (全組)
-        return appData.logs.some(l => l.team === team && l.type === 6 && l.date === today);
-    }
-
+    function hasTodayTeamBonus6(team, today) { return appData.logs.some(l => l.team === team && l.type === 6 && l.date === today); }
     function getMemberTodayScore(team, member, today) {
         return appData.logs.filter(l => l.team === team && l.member === member && l.date === today && l.type !== 6).reduce((s,l)=>s+l.points,0);
     }
@@ -542,41 +556,22 @@
 
     function addRecord(team, member, typeVal) {
         const type = parseInt(typeVal,10);
-        // 分數對應: type 1:+1, 2:+2, 3:+3, 4:+4, 5:+5, 6:+6, 7:+7
-        const pointsMap = {1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7};
+        const pointsMap = {1:1,2:2,3:3,4:4,5:5,6:6,7:7};
         const points = pointsMap[type];
         if (!points) return { success: false, msg: "錯誤項目" };
         const today = getTodayStr();
-
-        // 個人加分需選擇成員
         if (type !== 6) {
             if (!member) return { success: false, msg: "請選擇成員" };
-            const membersList = appData.teams[team].members;
-            if (!membersList.includes(member)) return { success: false, msg: `❌ ${member} 不是該團隊成員` };
+            if (!appData.teams[team].members.includes(member)) return { success: false, msg: `❌ ${member} 不是該團隊成員` };
         }
-
-        // 限動相關 (type 1 或 2) 互斥，一天只能擇一
-        if (type === 1 || type === 2) {
-            if (hasTodayLimitStory(team, member, today)) {
-                return { success: false, msg: `⚠️ ${member} 今日已有限動加分 (一般或起承轉合)，每人每日限一次` };
-            }
+        if ((type === 1 || type === 2) && hasTodayLimitStory(team, member, today)) {
+            return { success: false, msg: `⚠️ ${member} 今日已有限動加分，每人每日限一次` };
         }
-
-        // 全組加分 (type 6)
         if (type === 6) {
             if (member && member !== "") return { success: false, msg: "全組加分不需選成員" };
             if (hasTodayTeamBonus6(team, today)) return { success: false, msg: "今日已用過全組加分" };
         }
-
-        const newLog = {
-            id: Date.now() + Math.random(),
-            team: team,
-            member: (type === 6) ? "全組行動" : member,
-            type: type,
-            points: points,
-            date: today,
-            timestamp: Date.now()
-        };
+        const newLog = { id: Date.now()+Math.random(), team, member: type===6?"全組行動":member, type, points, date: today, timestamp: Date.now() };
         appData.logs.unshift(newLog);
         saveToLocal();
         renderAll();
@@ -591,18 +586,16 @@
     function updateTeamPunish(team, newPunish) { appData.teams[team].punish = newPunish; saveToLocal(); renderAll(); }
 
     function renderTopScoreBar() {
-        const scoreA = computeTeamScore('A');
-        const scoreB = computeTeamScore('B');
+        const scoreA = computeTeamScore('A'), scoreB = computeTeamScore('B');
         const leader = scoreA > scoreB ? appData.teams.A.name : (scoreB > scoreA ? appData.teams.B.name : "平手");
         const diff = Math.abs(scoreA-scoreB);
-        const bar = document.getElementById('scoreBar');
-        bar.innerHTML = `
+        document.getElementById('scoreBar').innerHTML = `
             <div class="team-score-compact">
                 <div class="team-compact"><div class="name">${escapeHtml(appData.teams.A.name)}</div><div class="points">${scoreA}</div></div>
                 <span class="vs">VS</span>
                 <div class="team-compact"><div class="name">${escapeHtml(appData.teams.B.name)}</div><div class="points">${scoreB}</div></div>
             </div>
-            <div class="leader-info">🏆 ${leader} ${scoreA!==scoreB ? `領先 ${diff} 分` : "雙方平手"}</div>
+            <div class="leader-info">🏆 ${leader} ${scoreA!==scoreB ? `領先 ${diff} 分` : "平手"}</div>
         `;
     }
 
@@ -614,44 +607,28 @@
             let html = '<div class="member-list">';
             members.forEach(m => {
                 const todayScore = getMemberTodayScore(teamLetter, m, today);
-                html += `<div class="member-chip">
-                            ${escapeHtml(m)}
-                            <span class="member-today-score">📅 今日 +${todayScore}</span>
-                            <button class="delete-member" data-team="${teamLetter}" data-member="${escapeHtml(m)}">✖</button>
-                         </div>`;
+                html += `<div class="member-chip">${escapeHtml(m)}<span class="member-today-score">📅今日+${todayScore}</span><button class="delete-member" data-team="${teamLetter}" data-member="${escapeHtml(m)}">✖</button></div>`;
             });
             html += '</div>';
-            html += `<div class="add-member-form">
-                        <input type="text" class="add-member-input" id="newMember${teamLetter}" placeholder="新隊員名字" autocomplete="off">
-                        <button class="add-member-btn" data-team="${teamLetter}">➕ 新增隊員</button>
-                     </div>`;
+            html += `<div class="add-member-form"><input type="text" class="add-member-input" id="newMember${teamLetter}" placeholder="新隊員名字"><button class="add-member-btn" data-team="${teamLetter}">➕ 新增</button></div>`;
             return html;
         };
-
         grid.innerHTML = `
             <div class="team-card">
-                <div class="team-header">
-                    <input type="text" class="team-name-input" id="teamAName" value="${escapeHtml(appData.teams.A.name)}">
-                    <div class="punish-area"><span class="punish-label">😈 自我懲罰</span><input type="text" class="punish-text" id="teamAPunish" value="${escapeHtml(appData.teams.A.punish)}"></div>
-                </div>
+                <div class="team-header"><input type="text" class="team-name-input" id="teamAName" value="${escapeHtml(appData.teams.A.name)}"><div class="punish-area"><span class="punish-label">😈 懲罰</span><input type="text" class="punish-text" id="teamAPunish" value="${escapeHtml(appData.teams.A.punish)}"></div></div>
                 <div class="team-score"><div class="score-number">${computeTeamScore('A')}</div><div>團隊總分</div></div>
                 <div class="members-section"><div class="members-title">👥 隊員名單 (今日貢獻)</div>${renderMemberList('A','A')}</div>
             </div>
             <div class="team-card">
-                <div class="team-header">
-                    <input type="text" class="team-name-input" id="teamBName" value="${escapeHtml(appData.teams.B.name)}">
-                    <div class="punish-area"><span class="punish-label">😈 自我懲罰</span><input type="text" class="punish-text" id="teamBPunish" value="${escapeHtml(appData.teams.B.punish)}"></div>
-                </div>
+                <div class="team-header"><input type="text" class="team-name-input" id="teamBName" value="${escapeHtml(appData.teams.B.name)}"><div class="punish-area"><span class="punish-label">😈 懲罰</span><input type="text" class="punish-text" id="teamBPunish" value="${escapeHtml(appData.teams.B.punish)}"></div></div>
                 <div class="team-score"><div class="score-number">${computeTeamScore('B')}</div><div>團隊總分</div></div>
                 <div class="members-section"><div class="members-title">👥 隊員名單 (今日貢獻)</div>${renderMemberList('B','B')}</div>
             </div>
         `;
-
         document.getElementById('teamAName')?.addEventListener('change', e=>updateTeamName('A', e.target.value));
         document.getElementById('teamAPunish')?.addEventListener('change', e=>updateTeamPunish('A', e.target.value));
         document.getElementById('teamBName')?.addEventListener('change', e=>updateTeamName('B', e.target.value));
         document.getElementById('teamBPunish')?.addEventListener('change', e=>updateTeamPunish('B', e.target.value));
-
         document.querySelectorAll('.add-member-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const team = btn.getAttribute('data-team');
@@ -668,18 +645,23 @@
                 if(confirm(`刪除隊員「${member}」？`)) removeMember(team, member);
             });
         });
+        // 更新表單中的團隊按鈕文字 (隊名)
+        const teamABtn = document.getElementById('teamABtn');
+        const teamBBtn = document.getElementById('teamBBtn');
+        if (teamABtn) teamABtn.innerText = appData.teams.A.name;
+        if (teamBBtn) teamBBtn.innerText = appData.teams.B.name;
     }
 
     function renderLogTable() {
         const tbody = document.getElementById('logBody');
         if(!tbody) return;
         if(appData.logs.length===0) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center">暫無紀錄</td></tr>'; return; }
-        let html='';
         const typeMap = {1:'①限動+1',2:'②起承轉合+2',3:'③詢問+3',4:'④成交+4',5:'⑤Reels+5',6:'⑥全組+6',7:'⑦素材+7'};
+        let html='';
         for(let log of appData.logs) {
             const teamName = log.team==='A'? appData.teams.A.name : appData.teams.B.name;
             const timeStr = new Date(log.timestamp).toLocaleString('zh-TW');
-            html+=`<tr><td style="white-space:nowrap">${escapeHtml(timeStr)}</td><td><span class="badge" style="background:#fce5d8;padding:2px 10px;">${escapeHtml(teamName)}</span></td><td>${escapeHtml(log.member||'—')}</td><td>${typeMap[log.type]}</td><td>+${log.points}</td><td><button class="delete-log" data-id="${log.id}">🗑️</button></td></tr>`;
+            html+=`<tr><td style="white-space:nowrap">${escapeHtml(timeStr)}</td><td><span style="background:#fce5d8;padding:2px 8px;border-radius:20px;">${escapeHtml(teamName)}</span></td><td>${escapeHtml(log.member||'—')}</td><td>${typeMap[log.type]}</td><td>+${log.points}</td><td><button class="delete-log" data-id="${log.id}">🗑️</button></td></tr>`;
         }
         tbody.innerHTML = html;
         document.querySelectorAll('.delete-log').forEach(btn => {
@@ -687,23 +669,68 @@
         });
     }
 
+    // 表單團隊選擇狀態 (直接以隊名按鈕切換)
+    let selectedTeam = 'A';
+    function updateTeamButtons() {
+        const btnA = document.getElementById('teamABtn');
+        const btnB = document.getElementById('teamBBtn');
+        if (btnA) {
+            if (selectedTeam === 'A') btnA.classList.add('active');
+            else btnA.classList.remove('active');
+        }
+        if (btnB) {
+            if (selectedTeam === 'B') btnB.classList.add('active');
+            else btnB.classList.remove('active');
+        }
+        // 更新成員下拉選單
+        const memberSelect = document.getElementById('memberSelectForm');
+        const members = appData.teams[selectedTeam].members || [];
+        memberSelect.innerHTML = '<option value="">-- 請選擇成員 --</option>' + members.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+    }
+
+    function bindForm() {
+        const btnA = document.getElementById('teamABtn');
+        const btnB = document.getElementById('teamBBtn');
+        if (btnA) {
+            btnA.addEventListener('click', () => {
+                selectedTeam = 'A';
+                updateTeamButtons();
+            });
+        }
+        if (btnB) {
+            btnB.addEventListener('click', () => {
+                selectedTeam = 'B';
+                updateTeamButtons();
+            });
+        }
+        const addBtn = document.getElementById('addRecordBtn');
+        addBtn.addEventListener('click', () => {
+            const member = document.getElementById('memberSelectForm').value;
+            const action = document.getElementById('actionTypeForm').value;
+            if (parseInt(action) !== 6 && !member) { alert("請選擇成員"); return; }
+            const res = addRecord(selectedTeam, member, action);
+            alert(res.msg);
+        });
+        document.getElementById('resetAllDataBtn')?.addEventListener('click', resetAll);
+    }
+
     function showAddDialog(type) {
-        if (type === 6) { // 全組加分
-            const teamKey = prompt("請選擇團隊：\n輸入 A 或 B\nA = 左隊\nB = 右隊");
+        if (type === 6) {
+            const teamKey = prompt("請選擇團隊：\nA = 左隊\nB = 右隊");
             if (!teamKey) return;
             const team = teamKey.toUpperCase() === 'A' ? 'A' : (teamKey.toUpperCase() === 'B' ? 'B' : null);
             if (!team) { alert("請輸入 A 或 B"); return; }
             const res = addRecord(team, "", "6");
             alert(res.msg);
         } else {
-            const teamKey = prompt("請選擇團隊：\n輸入 A 或 B\nA = 左隊\nB = 右隊");
+            const teamKey = prompt("請選擇團隊：\nA = 左隊\nB = 右隊");
             if (!teamKey) return;
             const team = teamKey.toUpperCase() === 'A' ? 'A' : (teamKey.toUpperCase() === 'B' ? 'B' : null);
             if (!team) { alert("請輸入 A 或 B"); return; }
             const members = appData.teams[team].members;
-            if (!members.length) { alert("此團隊尚無隊員，請先新增隊員"); return; }
+            if (!members.length) { alert("請先新增隊員"); return; }
             const listStr = members.map((m,i)=>`${i+1}. ${m}`).join('\n');
-            const input = prompt(`請選擇成員 (輸入數字或名稱)\n${listStr}`);
+            const input = prompt(`請選擇成員 (數字或名稱)\n${listStr}`);
             if (!input) return;
             let selected = null;
             if (!isNaN(parseInt(input))) { let idx=parseInt(input)-1; if(idx>=0 && idx<members.length) selected=members[idx]; }
@@ -715,38 +742,12 @@
     }
 
     function bindQuickActions() {
-        const btns = document.querySelectorAll('.action-btn');
-        btns.forEach(btn => {
+        document.querySelectorAll('.action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const type = parseInt(btn.getAttribute('data-type'), 10);
                 showAddDialog(type);
             });
         });
-    }
-
-    function updateMemberSelectForm() {
-        const teamSelect = document.getElementById('teamSelectForm');
-        const memberSelect = document.getElementById('memberSelectForm');
-        const members = appData.teams[teamSelect.value].members || [];
-        memberSelect.innerHTML = '<option value="">-- 請選擇成員 --</option>' + members.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
-    }
-
-    function bindForm() {
-        const teamSelect = document.getElementById('teamSelectForm');
-        const addBtn = document.getElementById('addRecordBtn');
-        const memberSelect = document.getElementById('memberSelectForm');
-        const actionSelect = document.getElementById('actionTypeForm');
-        teamSelect.addEventListener('change', ()=>updateMemberSelectForm());
-        updateMemberSelectForm();
-        addBtn.addEventListener('click', ()=>{
-            const team = teamSelect.value;
-            let member = memberSelect.value;
-            const action = actionSelect.value;
-            if(parseInt(action)!==6 && !member) { alert("請選擇成員"); return; }
-            const res = addRecord(team, member, action);
-            alert(res.msg);
-        });
-        document.getElementById('resetAllDataBtn')?.addEventListener('click', resetAll);
     }
 
     function renderAll() {
@@ -755,12 +756,13 @@
         renderLogTable();
         bindQuickActions();
         bindForm();
+        updateTeamButtons();
         updateCountdown();
     }
 
     loadFromLocal();
     renderAll();
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=> m==='&'?'&amp;': m==='<'?'&lt;':'&gt;'); }
 </script>
 </body>
 </html>
