@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>母親節團隊競賽 · 倒數衝刺</title>
+    <title>母親節團隊競賽 · 限動起承轉合+2</title>
     <style>
         * {
             margin: 0;
@@ -121,7 +121,7 @@
             font-size: 0.85rem;
         }
 
-        /* 加分工具列 - 放在標題下方 */
+        /* 加分工具列 */
         .action-bar {
             background: #fff8f0;
             border-radius: 60px;
@@ -417,14 +417,15 @@
         <div class="sub">🏆 贏家3000元 · 輸家自我懲罰</div>
     </div>
 
-    <!-- 加分工具列 -->
+    <!-- 加分工具列（新增「起承轉合+2」） -->
     <div class="action-bar">
-        <button class="action-btn" data-type="1">① 發限動 +1</button>
-        <button class="action-btn" data-type="2">② 有人詢問 +3</button>
-        <button class="action-btn" data-type="3">③ 成交 +4</button>
-        <button class="action-btn" data-type="4">④ 發Reels +5</button>
-        <button class="action-btn special" data-type="5">⑤ 全組都有發 +6</button>
-        <button class="action-btn" data-type="6">⑥ 提供素材 +7</button>
+        <button class="action-btn" data-type="1">① 發限動 (置入產品) +1</button>
+        <button class="action-btn" data-type="2">② 限動起承轉合 +2</button>
+        <button class="action-btn" data-type="3">③ 有人詢問 +3</button>
+        <button class="action-btn" data-type="4">④ 成交 +4</button>
+        <button class="action-btn" data-type="5">⑤ 發Reels +5</button>
+        <button class="action-btn special" data-type="6">⑥ 全組都有發 +6</button>
+        <button class="action-btn" data-type="7">⑦ 提供素材 +7</button>
     </div>
 
     <div class="teams-grid" id="teamsGrid"></div>
@@ -449,12 +450,13 @@
             <div class="input-group">
                 <label>加分項目</label>
                 <select id="actionTypeForm">
-                    <option value="1">① 發限動 +1 (每人每日限1)</option>
-                    <option value="2">② 有人詢問 +3</option>
-                    <option value="3">③ 成交 +4</option>
-                    <option value="4">④ 發Reels +5</option>
-                    <option value="5">⑤ 全組每人發限動 +6</option>
-                    <option value="6">⑥ 分享素材 +7</option>
+                    <option value="1">① 發限動 (置入產品) +1 (每日限1次)</option>
+                    <option value="2">② 限動起承轉合 +2 (每日限1次，與①擇一)</option>
+                    <option value="3">③ 有人詢問 +3</option>
+                    <option value="4">④ 成交 +4</option>
+                    <option value="5">⑤ 發Reels +5</option>
+                    <option value="6">⑥ 全組每人發限動 +6</option>
+                    <option value="7">⑦ 分享素材 +7</option>
                 </select>
             </div>
             <div class="input-group">
@@ -462,8 +464,8 @@
             </div>
         </div>
         <div class="rule-hint">
-            <span>📌 ① 每人每日限一次，系統自動擋重複</span>
-            <span>👥 ⑤ 全組加分不需選成員</span>
+            <span>📌 ① & ② 每人每日僅能擇一獲得 (限動相關)</span>
+            <span>👥 ⑥ 全組加分不需選成員</span>
             <span>📊 隊員今日貢獻顯示在名字旁</span>
         </div>
     </div>
@@ -475,7 +477,7 @@
         </div>
         <div style="overflow-x: auto;">
             <table>
-                <thead><tr><th>時間</th><th>團隊</th><th>成員</th><th>項目</th><th>分數</th><th></th></tr></thead>
+                <thead><tr><th>時間</th><th>團隊</th><th>成員</th><th>項目</th><th>分數</th><th></th></thead>
                 <tbody id="logBody"></tbody>
             </table>
         </div>
@@ -484,7 +486,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = "mother_day_contest_v4";
+    const STORAGE_KEY = "mother_day_contest_v5";
     let appData = {
         teams: {
             A: { name: "愛心媽咪隊", punish: "輸家請喝珍奶", members: ["小美", "阿華", "小莉"] },
@@ -493,8 +495,8 @@
         logs: []
     };
 
-    // 倒數計時目標日期 (2026/5/11 23:59:59 當地時間)
-    const END_DATE = new Date(2026, 4, 11, 23, 59, 59); // 月份從0開始，4=5月
+    // 倒數計時目標日期 (2026/5/11 23:59:59)
+    const END_DATE = new Date(2026, 4, 11, 23, 59, 59);
 
     function updateCountdown() {
         const now = new Date();
@@ -508,10 +510,8 @@
             countdownEl.innerText = `${diffDays} 天`;
         }
     }
-
-    // 每秒更新倒數
     setInterval(updateCountdown, 1000);
-    // 儲存相關函數
+
     function saveToLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); }
     function loadFromLocal() {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -525,33 +525,62 @@
         saveToLocal();
     }
     function getTodayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-    function hasTodayType1(team, member, today) { return appData.logs.some(l => l.team===team && l.member===member && l.type===1 && l.date===today); }
-    function hasTodayTeamBonus5(team, today) { return appData.logs.some(l => l.team===team && l.type===5 && l.date===today); }
+
+    // 檢查同一人今天是否已經有過限動相關加分 (type 1 或 2)
+    function hasTodayLimitStory(team, member, today) {
+        return appData.logs.some(l => l.team === team && l.member === member && l.date === today && (l.type === 1 || l.type === 2));
+    }
+
+    function hasTodayTeamBonus6(team, today) { // 原 type 5 變成 type 6 (全組)
+        return appData.logs.some(l => l.team === team && l.type === 6 && l.date === today);
+    }
+
     function getMemberTodayScore(team, member, today) {
-        return appData.logs.filter(l => l.team===team && l.member===member && l.date===today && l.type!==5).reduce((s,l)=>s+l.points,0);
+        return appData.logs.filter(l => l.team === team && l.member === member && l.date === today && l.type !== 6).reduce((s,l)=>s+l.points,0);
     }
     function computeTeamScore(team) { return appData.logs.filter(l=>l.team===team).reduce((s,l)=>s+l.points,0); }
 
     function addRecord(team, member, typeVal) {
         const type = parseInt(typeVal,10);
-        let points = [0,1,3,4,5,6,7][type];
+        // 分數對應: type 1:+1, 2:+2, 3:+3, 4:+4, 5:+5, 6:+6, 7:+7
+        const pointsMap = {1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7};
+        const points = pointsMap[type];
         if (!points) return { success: false, msg: "錯誤項目" };
         const today = getTodayStr();
-        if (type !== 5) {
+
+        // 個人加分需選擇成員
+        if (type !== 6) {
             if (!member) return { success: false, msg: "請選擇成員" };
             const membersList = appData.teams[team].members;
             if (!membersList.includes(member)) return { success: false, msg: `❌ ${member} 不是該團隊成員` };
         }
-        if (type === 1 && hasTodayType1(team, member, today)) return { success: false, msg: `⚠️ ${member} 今日已用過①發限動` };
-        if (type === 5) {
-            if (member && member!=="") return { success: false, msg: "全組加分不需選成員" };
-            if (hasTodayTeamBonus5(team, today)) return { success: false, msg: "今日已用過全組加分" };
+
+        // 限動相關 (type 1 或 2) 互斥，一天只能擇一
+        if (type === 1 || type === 2) {
+            if (hasTodayLimitStory(team, member, today)) {
+                return { success: false, msg: `⚠️ ${member} 今日已有限動加分 (一般或起承轉合)，每人每日限一次` };
+            }
         }
-        const newLog = { id: Date.now()+Math.random(), team, member: type===5?"全組行動":member, type, points, date: today, timestamp: Date.now() };
+
+        // 全組加分 (type 6)
+        if (type === 6) {
+            if (member && member !== "") return { success: false, msg: "全組加分不需選成員" };
+            if (hasTodayTeamBonus6(team, today)) return { success: false, msg: "今日已用過全組加分" };
+        }
+
+        const newLog = {
+            id: Date.now() + Math.random(),
+            team: team,
+            member: (type === 6) ? "全組行動" : member,
+            type: type,
+            points: points,
+            date: today,
+            timestamp: Date.now()
+        };
         appData.logs.unshift(newLog);
         saveToLocal();
         renderAll();
-        return { success: true, msg: `✅ +${points}分 (${type===5?'團隊':member})` };
+        return { success: true, msg: `✅ +${points}分 (${type===6?'團隊':member})` };
     }
 
     function deleteLog(id) { appData.logs = appData.logs.filter(l=>l.id!==id); saveToLocal(); renderAll(); }
@@ -646,10 +675,10 @@
         if(!tbody) return;
         if(appData.logs.length===0) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center">暫無紀錄</td></tr>'; return; }
         let html='';
+        const typeMap = {1:'①限動+1',2:'②起承轉合+2',3:'③詢問+3',4:'④成交+4',5:'⑤Reels+5',6:'⑥全組+6',7:'⑦素材+7'};
         for(let log of appData.logs) {
             const teamName = log.team==='A'? appData.teams.A.name : appData.teams.B.name;
             const timeStr = new Date(log.timestamp).toLocaleString('zh-TW');
-            const typeMap = {1:'①限動+1',2:'②詢問+3',3:'③成交+4',4:'④Reels+5',5:'⑤全組+6',6:'⑥素材+7'};
             html+=`<tr><td style="white-space:nowrap">${escapeHtml(timeStr)}</td><td><span class="badge" style="background:#fce5d8;padding:2px 10px;">${escapeHtml(teamName)}</span></td><td>${escapeHtml(log.member||'—')}</td><td>${typeMap[log.type]}</td><td>+${log.points}</td><td><button class="delete-log" data-id="${log.id}">🗑️</button></td></tr>`;
         }
         tbody.innerHTML = html;
@@ -659,12 +688,12 @@
     }
 
     function showAddDialog(type) {
-        if (type === 5) {
+        if (type === 6) { // 全組加分
             const teamKey = prompt("請選擇團隊：\n輸入 A 或 B\nA = 左隊\nB = 右隊");
             if (!teamKey) return;
             const team = teamKey.toUpperCase() === 'A' ? 'A' : (teamKey.toUpperCase() === 'B' ? 'B' : null);
             if (!team) { alert("請輸入 A 或 B"); return; }
-            const res = addRecord(team, "", "5");
+            const res = addRecord(team, "", "6");
             alert(res.msg);
         } else {
             const teamKey = prompt("請選擇團隊：\n輸入 A 或 B\nA = 左隊\nB = 右隊");
@@ -713,7 +742,7 @@
             const team = teamSelect.value;
             let member = memberSelect.value;
             const action = actionSelect.value;
-            if(parseInt(action)!==5 && !member) { alert("請選擇成員"); return; }
+            if(parseInt(action)!==6 && !member) { alert("請選擇成員"); return; }
             const res = addRecord(team, member, action);
             alert(res.msg);
         });
@@ -726,7 +755,7 @@
         renderLogTable();
         bindQuickActions();
         bindForm();
-        updateCountdown(); // 立即顯示
+        updateCountdown();
     }
 
     loadFromLocal();
