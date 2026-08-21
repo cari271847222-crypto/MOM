@@ -1,404 +1,6 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" style="background-color: transparent;"><head>
-    <script>
-      (function() {
-        // Capture host references before any artifact code runs: Window.parent
-        // is [Replaceable] (a top-level `var parent` in artifact code would
-        // replace the accessor with a data property), and a top-level
-        // `const crypto` would shadow the global — either would otherwise
-        // silently break the bridge for artifacts that worked before.
-        const realParent = window.parent;
-        const cryptoObj = window.crypto;
-        // html-to-image is only used by takeScreenshot: fetched on first use, not as a
-        // parser-blocking tag. Native fetch, captured before the proxy override below.
-        const realFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
-        const HTML_TO_IMAGE_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.min.js";
-        const HTML_TO_IMAGE_INTEGRITY = "sha512-iZ2ORl595Wx6miw+GuadDet4WQbdSWS3JLMoNfY8cRGoEFy6oT3G9IbcrBeL6AfkgpA51ETt/faX6yLV+/gFJg==";
-        let htmlToImageLoad = null;
-        const loadHtmlToImage = () => {
-          if (!htmlToImageLoad) {
-            htmlToImageLoad = (realFetch
-              ? realFetch(HTML_TO_IMAGE_SRC, { integrity: HTML_TO_IMAGE_INTEGRITY, credentials: 'omit', referrerPolicy: 'no-referrer' })
-              : Promise.reject(new Error('fetch unavailable'))
-            )
-              .then((res) => {
-                if (!res.ok) throw new Error('html-to-image failed to load (' + res.status + ')');
-                return res.text();
-              })
-              .then((source) => {
-                // UMD bundle: hide the artifact's AMD/CommonJS globals so it takes the
-                // window-global branch; inline script text runs synchronously on insert.
-                const hidden = ['define', 'module', 'exports'].map((k) => {
-                  const entry = { k, own: Object.prototype.hasOwnProperty.call(window, k), v: window[k] };
-                  try { window[k] = undefined; } catch (e) {}
-                  return entry;
-                });
-                try {
-                  const el = document.createElement('script');
-                  el.text = source;
-                  (document.head || document.documentElement).appendChild(el);
-                } finally {
-                  hidden.forEach(({ k, own, v }) => {
-                    try { if (own) { window[k] = v; } else { delete window[k]; } } catch (e) {}
-                  });
-                }
-                if (!window.htmlToImage) throw new Error('html-to-image unavailable after load');
-                return window.htmlToImage;
-              });
-            // A failed load may be transient; let the next screenshot retry.
-            htmlToImageLoad.catch(() => { htmlToImageLoad = null; });
-          }
-          return htmlToImageLoad;
-        };
-        // crypto.randomUUID exists only in Secure Contexts; fall back to a
-        // unique non-crypto id elsewhere (http://LAN-IP dev flows) —
-        // uniqueness is what the bridge needs, unpredictability is
-        // defense-in-depth on top of the source guards.
-        const newRequestId =
-          cryptoObj && typeof cryptoObj.randomUUID === "function"
-            ? function () { return cryptoObj.randomUUID(); }
-            : function () { return Date.now() + "-" + Math.random(); };
-        const originalConsole = window.console;
-        window.console = {
-          log: (...args) => {
-            originalConsole.log(...args);
-            realParent.postMessage({ type: 'console', message: args.join(' ') }, '*');
-          },
-          error: (...args) => {
-            originalConsole.error(...args);
-            realParent.postMessage({ type: 'console', message: 'Error: ' + args.join(' ') }, '*');
-          },
-          warn: (...args) => {
-            originalConsole.warn(...args);
-            realParent.postMessage({ type: 'console', message: 'Warning: ' + args.join(' ') }, '*');
-          }
-        };
-
-        // Bridge request ids are crypto-random (not sequential) so they
-        // cannot be predicted by other frames in the tab.
-        let callbacksMap = new Map();
-        let streamControllers = new Map();
-        
-        window.claude = {
-          complete: (prompt) => {
-            return new Promise((resolve, reject) => {
-              const id = newRequestId();
-              callbacksMap.set(id, { resolve, reject });
-              realParent.postMessage({ type: 'claudeComplete', id, prompt }, '*');
-            });
-          }
-        };
-
-        window.storage = {
-          get: (key, shared = false) => {
-            return new Promise((resolve, reject) => {
-              const id = newRequestId();
-              callbacksMap.set(id, { resolve, reject });
-              realParent.postMessage({ type: 'storageGet', id, key, shared }, '*');
-            });
-          },
-          set: (key, value, shared = false) => {
-            return new Promise((resolve, reject) => {
-              const id = newRequestId();
-              callbacksMap.set(id, { resolve, reject });
-              realParent.postMessage({ type: 'storageSet', id, key, value, shared }, '*');
-            });
-          },
-          delete: (key, shared = false) => {
-            return new Promise((resolve, reject) => {
-              const id = newRequestId();
-              callbacksMap.set(id, { resolve, reject });
-              realParent.postMessage({ type: 'storageDelete', id, key, shared }, '*');
-            });
-          },
-          list: (prefix, shared = false) => {
-            return new Promise((resolve, reject) => {
-              const id = newRequestId();
-              callbacksMap.set(id, { resolve, reject });
-              realParent.postMessage({ type: 'storageList', id, prefix, shared }, '*');
-            });
-          }
-        };
-
-        let pendingBlobs = new Map();
-        URL.createObjectURL = (blob) => {
-          // Store the blob and create an ID and URL for it
-          const blobId = `blob-${Date.now()}-${Math.random()}`;
-          pendingBlobs.set(blobId, blob);
-          return `blob-request://${blobId}`;
-        };
-
-        URL.revokeObjectURL = (url) => {
-          // Remove the blob from our store
-          const blobId = url.replace("blob-request://", "");
-          pendingBlobs.delete(blobId);
-        };
-
-        const getBlobFromURL = (url) => {
-          const blobId = url.replace("blob-request://", "");
-          return pendingBlobs.get(blobId);
-        };
-
-        // Override global fetch with streaming support
-        window.fetch = (url, init = {}) => {
-          return new Promise((resolve, reject) => {
-            const id = newRequestId();
-            const channelId = `fetch-${id}-${Date.now()}`;
-            
-            callbacksMap.set(id, { 
-              resolve: (response) => {
-                // Null-body statuses: Response(stream, {status: 204}) throws
-                // per the Fetch spec, which would escape this resolver and
-                // hang the artifact's await forever.
-                if (response.status === 204 || response.status === 205 || response.status === 304) {
-                  try {
-                    resolve(new Response(null, {
-                      status: response.status,
-                      statusText: response.statusText,
-                      headers: response.headers
-                    }));
-                  } catch (err) {
-                    // Invalid statusText/header bytes can throw here too.
-                    reject(new TypeError(
-                      'Bridge fetch: unconstructable response (status ' + response.status + ')'
-                    ));
-                  }
-                  return;
-                }
-                // Create a ReadableStream for the response body
-                const stream = new ReadableStream({
-                  start(controller) {
-                    streamControllers.set(channelId, controller);
-                  },
-                  cancel() {
-                    streamControllers.delete(channelId);
-                  }
-                });
-                
-                // Create and return the Response with the stream. Response()
-                // requires status in [200, 599]; an opaque/no-cors fetch
-                // forwards status 0, which would throw here and escape the
-                // resolver, hanging the artifact's await. Surface it as a
-                // network-error-shaped rejection instead.
-                try {
-                  resolve(new Response(stream, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: response.headers
-                  }));
-                } catch (err) {
-                  streamControllers.delete(channelId);
-                  reject(new TypeError(
-                    'Bridge fetch: unconstructable response (status ' + response.status + ')'
-                  ));
-                }
-              },
-              reject,
-              channelId
-            });
-            
-            realParent.postMessage({
-              type: 'proxyFetch',
-              id,
-              url,
-              init,
-              channelId
-            }, '*');
-          });
-        };
-
-        window.addEventListener('message', async (event) => {
-          // Only the embedding parent may drive the bridge — sibling and
-          // nested frames can also postMessage into this window.
-          if (event.source !== realParent) return;
-          if (event.data.type === 'takeScreenshot') {
-            // Echo the request's nonce so the requester can correlate the
-            // reply to ITS request — a reply without the expected nonce
-            // (e.g. from a stale pre-remount artifact) is ignored upstream.
-            const screenshotNonce = event.data.nonce;
-            const rootElement = document.getElementById('artifacts-component-root-html');
-            if (!rootElement) {
-              realParent.postMessage({
-                type: 'screenshotError',
-                nonce: screenshotNonce,
-                error: new Error('Root element not found'),
-              }, '*');
-              return;
-            }
-            // Catch CDN load failures and toPng errors so the parent always
-            // gets a response instead of hanging forever.
-            try {
-              const htmlToImage = await loadHtmlToImage();
-              const screenshot = await htmlToImage.toPng(rootElement, {
-                imagePlaceholder:
-                  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjePDgwX8ACOQDoNsk0PMAAAAASUVORK5CYII=",
-              });
-              realParent.postMessage({
-                type: 'screenshotData',
-                nonce: screenshotNonce,
-                data: screenshot,
-              }, '*');
-            } catch (err) {
-              realParent.postMessage({
-                type: 'screenshotError',
-                nonce: screenshotNonce,
-                error: err instanceof Error ? err : new Error(String(err)),
-              }, '*');
-            }
-          } else if (event.data.type === 'claudeComplete') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.completion);
-            }
-            callbacksMap.delete(event.data.id);
-          } else if (event.data.type === 'proxyFetchResponse') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-              callbacksMap.delete(event.data.id);
-            } else {
-              // Initial response with headers, status, etc.
-              callback.resolve({
-                status: event.data.status,
-                statusText: event.data.statusText,
-                headers: event.data.headers
-              });
-              // Don't delete the callback yet if streaming
-              if (!event.data.body) {
-                callbacksMap.delete(event.data.id);
-              }
-            }
-          } else if (event.data.type === 'proxyFetchStream') {
-            // Handle streaming data chunks
-            const controller = streamControllers.get(event.data.channelId);
-            if (controller) {
-              if (event.data.error) {
-                controller.error(new Error(event.data.error));
-                streamControllers.delete(event.data.channelId);
-              } else if (event.data.done) {
-                controller.close();
-                streamControllers.delete(event.data.channelId);
-                // Clean up the callback
-                const callback = Array.from(callbacksMap.entries()).find(
-                  ([_, value]) => value.channelId === event.data.channelId
-                );
-                if (callback) {
-                  callbacksMap.delete(callback[0]);
-                }
-              } else if (event.data.chunk) {
-                controller.enqueue(new Uint8Array(event.data.chunk));
-              }
-            }
-          } else if (event.data.type === 'storageGet') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.result);
-            }
-            callbacksMap.delete(event.data.id);
-          } else if (event.data.type === 'storageSet') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.result);
-            }
-            callbacksMap.delete(event.data.id);
-          } else if (event.data.type === 'storageDelete') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.result);
-            }
-            callbacksMap.delete(event.data.id);
-          } else if (event.data.type === 'storageList') {
-            const callback = callbacksMap.get(event.data.id);
-            if (!callback) return;
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.result);
-            }
-            callbacksMap.delete(event.data.id);
-          }
-        });
-
-        window.addEventListener('click', (event) => {
-          const isEl = event.target instanceof HTMLElement;
-          if (!isEl) return;
-    
-          // find ancestor links
-          const linkEl = event.target.closest("a");
-          if (!linkEl || !linkEl.href) return;
-    
-          event.preventDefault();
-          event.stopImmediatePropagation();
-    
-          if (linkEl.href.startsWith("blob-request:")) {
-            const blob = getBlobFromURL(linkEl.href);
-            if (!blob) return;
-            void blob.arrayBuffer().then((data) => {
-              realParent.postMessage({
-                type: "downloadFile",
-                filename: linkEl.download,
-                data,
-                mimeType: blob.type || "application/octet-stream",
-              });
-            });
-          } else if (linkEl.href.startsWith("data:")) {
-            const [header, base64Data] = linkEl.href.split(",");
-            const mimeMatch = header.match(/data:([^;]+)/);
-            const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-            const binaryString = atob(base64Data);
-            const data = Uint8Array.from(binaryString, (c) =>
-              c.charCodeAt(0),
-            ).buffer;
-            realParent.postMessage({
-              type: "downloadFile",
-              filename: linkEl.download,
-              data,
-              mimeType,
-            });
-          } else {
-            let linkUrl;
-            try {
-              linkUrl = new URL(linkEl.href);
-            } catch (error) {
-              return;
-            }
-    
-            if (linkUrl.hostname === window.location.hostname) return;
-      
-            realParent.postMessage({
-              type: 'openExternal',
-              href: linkEl.href,
-            }, '*');
-          }
-      });
-
-        const originalOpen = window.open;
-        window.open = function (url) {
-          realParent.postMessage({
-            type: "openExternal",
-            href: url,
-          }, "*");
-        };
-
-        window.addEventListener('error', (event) => {
-          realParent.postMessage({ type: 'console', message: 'Uncaught Error: ' + event.message }, '*');
-        });
-      })();
-    </script>
-  
+<html lang="zh-Hant">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -411,8 +13,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,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">
 <title>代購小幫手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&amp;display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F3ECE1;
@@ -602,7 +204,7 @@
   h3.section-title{ font-size:13px; color:var(--text-soft); margin:18px 0 8px 2px; font-weight:700; letter-spacing:0.5px; }
 </style>
 </head>
-<body id="artifacts-component-root-html" style="background-color: transparent;">
+<body>
 
 <header>
   <div class="header-row">
@@ -613,69 +215,43 @@
     </div>
   </div>
   <button class="settings-btn" onclick="openSettings()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.36 9c.1.33.29.63.54.87.25.24.55.42.87.53H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.36 9c.1.33.29.63.54.87.25.24.55.42.87.53H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
   </button>
 </header>
 
 <main>
 
   <!-- 目前場次 -->
-  <div class="view active" id="view-session">
-      <div class="card fab-start">
-        <div style="font-size:36px; margin-bottom:8px;">🛍️</div>
-        <div style="font-weight:700; font-size:16px; margin-bottom:4px;">還沒有進行中的場次</div>
-        <div style="color:var(--text-soft); font-size:13px; margin-bottom:16px;">到現場看到商品後，開一個新場次就可以開始記錄囉</div>
-        <div class="row">
-          <input type="text" id="newTripName" placeholder="場次名稱（選填，例如：東京團）">
-        </div>
-        <button class="btn-main btn-block" style="margin-top:12px;" onclick="startTrip(document.getElementById('newTripName').value)">開始新場次</button>
-      </div></div>
+  <div class="view active" id="view-session"></div>
 
   <!-- 顧客記錄 -->
-  <div class="view" id="view-customers">
-    <div class="search-box">
-      <input type="text" placeholder="🔍 搜尋顧客名稱" value="" oninput="customerSearch=this.value; renderCustomers();">
-    </div>
-  <div class="empty"><span class="emoji">🥰</span>結算場次後，顧客記錄會自動出現在這裡</div></div>
+  <div class="view" id="view-customers"></div>
 
   <!-- 商品價格 -->
-  <div class="view" id="view-prices"><div class="empty"><span class="emoji">💰</span>加過的商品價格會自動記在這裡，方便你查上次開多少</div></div>
+  <div class="view" id="view-prices"></div>
 
   <!-- 歷史場次 -->
-  <div class="view" id="view-history"><div class="empty"><span class="emoji">🗂️</span>結算過的場次會顯示在這裡</div></div>
+  <div class="view" id="view-history"></div>
 
 </main>
 
 <nav class="tabbar">
   <button data-tab="session" class="active">
-    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></span>目前場次
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>目前場次
   </button>
   <button data-tab="customers">
-    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6"></path><circle cx="17.5" cy="7.5" r="2.2"></circle><path d="M16 12.3c2 .5 3.5 2.4 3.5 4.7"></path></svg></span>顧客記錄
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6"/><circle cx="17.5" cy="7.5" r="2.2"/><path d="M16 12.3c2 .5 3.5 2.4 3.5 4.7"/></svg></span>顧客記錄
   </button>
   <button data-tab="prices">
-    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.5 20 10.9a2 2 0 0 1 0 2.8l-6.3 6.3a2 2 0 0 1-2.8 0L3.5 12.6V3.5h9.1z"></path><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>商品價格
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.5 20 10.9a2 2 0 0 1 0 2.8l-6.3 6.3a2 2 0 0 1-2.8 0L3.5 12.6V3.5h9.1z"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg></span>商品價格
   </button>
   <button data-tab="history">
-    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 8v4l3 2"></path></svg></span>歷史場次
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></span>歷史場次
   </button>
 </nav>
 
-<div class="modal-backdrop show" id="modalBackdrop">
-  <div class="modal-sheet" id="modalSheet">
-    <div class="modal-title">⚙️ 設定</div>
-    <div class="modal-sub">備份、還原資料</div>
-    <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="openBlacklistManager()">🚫 跑單黑名單管理</button>
-    <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="copySourceCode()">💻 複製完整程式碼</button>
-    <button class="btn-main btn-block" onclick="exportData()">📤 匯出資料</button>
-    <button class="btn-ghost btn-block" style="margin-top:10px;" onclick="document.getElementById('importFileInput').click()">📥 匯入資料</button>
-    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;" onchange="handleImportFile(this)">
-    <div style="font-size:12px; color:var(--text-soft); margin-top:14px; line-height:1.7;">
-      匯出後可以傳到雲端硬碟、傳訊息給自己，或存到「檔案」App 備份起來；換手機或重新安裝時，用匯入把資料讀回來就好。<br>
-      ⚠️ 匯入會直接覆蓋目前手機上的所有場次、顧客、價格資料，請先確認備份檔沒問題。
-    </div>
-    <button class="btn-ghost btn-block" style="margin-top:14px;" onclick="closeModal()">關閉</button>
-  </div>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-sheet" id="modalSheet"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1715,6 +1291,5 @@ window.addEventListener('pageshow', function(){
   resetToForeground();
 });
 </script>
-
-
-</body></html>
+</body>
+</html>
