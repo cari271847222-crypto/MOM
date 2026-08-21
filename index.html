@@ -428,18 +428,20 @@
     --shadow: 0 2px 10px rgba(139,111,78,0.12);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{ height:100%; }
   body{
     margin:0; background:var(--bg); color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
-    padding-bottom:78px;
     -webkit-user-select:none; user-select:none;
+    display:flex; flex-direction:column;
+    height:100vh; height:100dvh;
+    overflow:hidden;
   }
   input, textarea{ user-select:text; -webkit-user-select:text; }
   header{
     padding:calc(20px + env(safe-area-inset-top)) 18px 16px; background:var(--bg);
-    margin-bottom:16px;
     border-bottom:1px solid rgba(139,111,78,0.14);
-    position:sticky; top:0; z-index:5;
+    flex-shrink:0; position:relative;
   }
   .header-row{ display:flex; align-items:center; gap:13px; }
   .header-avatar{
@@ -459,10 +461,10 @@
   }
   header .sub{ font-size:12px; color:var(--text-soft); letter-spacing:0.2px; }
   nav.tabbar{
-    position:fixed; bottom:0; left:0; right:0; background:#FFFDF9;
+    flex-shrink:0; background:#FFFDF9;
     display:flex; border-radius:24px 24px 0 0;
     box-shadow:0 -2px 12px rgba(139,111,78,0.10);
-    padding-bottom:env(safe-area-inset-bottom); z-index:10;
+    padding-bottom:env(safe-area-inset-bottom);
   }
   nav.tabbar button{
     flex:1; background:none; border-radius:0; padding:10px 4px 8px;
@@ -477,7 +479,7 @@
   nav.tabbar button .ic svg{ width:20px; height:20px; display:block; }
   nav.tabbar button.active{ color:var(--mocha-dark); font-weight:700; }
   nav.tabbar button.active .ic{ background:var(--taupe-light); color:var(--mocha-dark); }
-  main{ padding:0 14px 20px; }
+  main{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px 20px; }
   .card{
     background:var(--card); border-radius:22px; padding:16px;
     margin-bottom:14px; box-shadow:var(--shadow);
@@ -662,17 +664,7 @@
 <div class="modal-backdrop show" id="modalBackdrop">
   <div class="modal-sheet" id="modalSheet">
     <div class="modal-title">⚙️ 設定</div>
-    <div class="modal-sub">備份、還原資料，調整常客門檻</div>
-    <div class="card" style="margin-bottom:14px;">
-      <div style="font-weight:700; margin-bottom:8px;">⭐ VIP 門檻</div>
-      <div class="row">
-        <span style="flex:1; font-size:13px; color:var(--text-soft);">累積消費達到這個金額，顧客記錄會自動標記 VIP</span>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <span style="flex:1; font-size:14px;">門檻金額</span>
-        <input type="number" value="3000" placeholder="0" style="max-width:120px; text-align:right;" inputmode="decimal" onchange="updateVipThreshold(this.value)">
-      </div>
-    </div>
+    <div class="modal-sub">備份、還原資料</div>
     <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="openBlacklistManager()">🚫 跑單黑名單管理</button>
     <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="copySourceCode()">💻 複製完整程式碼</button>
     <button class="btn-main btn-block" onclick="exportData()">📤 匯出資料</button>
@@ -697,11 +689,10 @@ function loadData(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw) return JSON.parse(raw);
   }catch(e){}
-  return { currentTrip:null, trips:[], customers:{}, priceHistory:{}, favoriteProducts:[], vipThreshold:3000, blacklist:{} };
+  return { currentTrip:null, trips:[], customers:{}, priceHistory:{}, favoriteProducts:[], blacklist:{} };
 }
 let data = loadData();
 if(!data.favoriteProducts) data.favoriteProducts = [];
-if(data.vipThreshold == null) data.vipThreshold = 3000;
 if(!data.blacklist) data.blacklist = {};
 function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
@@ -755,17 +746,7 @@ function showConfirm(title, sub, confirmLabel, onConfirm){
 function openSettings(){
   openModal(`
     <div class="modal-title">⚙️ 設定</div>
-    <div class="modal-sub">備份、還原資料，調整常客門檻</div>
-    <div class="card" style="margin-bottom:14px;">
-      <div style="font-weight:700; margin-bottom:8px;">⭐ VIP 門檻</div>
-      <div class="row">
-        <span style="flex:1; font-size:13px; color:var(--text-soft);">累積消費達到這個金額，顧客記錄會自動標記 VIP</span>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <span style="flex:1; font-size:14px;">門檻金額</span>
-        <input type="number" value="${data.vipThreshold || ''}" placeholder="0" style="max-width:120px; text-align:right;" inputmode="decimal" onchange="updateVipThreshold(this.value)">
-      </div>
-    </div>
+    <div class="modal-sub">備份、還原資料</div>
     <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="openBlacklistManager()">🚫 跑單黑名單管理</button>
     <button class="btn-ghost btn-block" style="margin-bottom:14px;" onclick="copySourceCode()">💻 複製完整程式碼</button>
     <button class="btn-main btn-block" onclick="exportData()">📤 匯出資料</button>
@@ -819,7 +800,6 @@ function handleImportFile(inputEl){
       if(!data.customers) data.customers = {};
       if(!data.priceHistory) data.priceHistory = {};
       if(!data.favoriteProducts) data.favoriteProducts = [];
-      if(data.vipThreshold == null) data.vipThreshold = 3000;
       if(!data.blacklist) data.blacklist = {};
       if(data.currentTrip === undefined) data.currentTrip = null;
       saveData();
@@ -1037,14 +1017,6 @@ function fillFavoriteProduct(encName){
       ? `💡 上次賣 ${money(last.price)}，成本 ${money(last.cost)}（${last.tripName}，${formatDate(last.date)}）`
       : `💡 上次開價 ${money(last.price)}（${last.tripName}，${formatDate(last.date)}）`;
   }
-}
-
-/* ---------------- VIP 門檻 ---------------- */
-function updateVipThreshold(val){
-  const v = parseFloat(val);
-  data.vipThreshold = isNaN(v) ? 0 : v;
-  saveData();
-  renderCustomers();
 }
 
 /* ---------------- 跑單黑名單 ---------------- */
@@ -1538,12 +1510,11 @@ function renderCustomers(){
     html += `<div class="empty"><span class="emoji">🥰</span>結算場次後，顧客記錄會自動出現在這裡</div>`;
   } else {
     list.forEach(c=>{
-      const isVip = data.vipThreshold > 0 && c.totalSpent >= data.vipThreshold;
       const isBl = isBlacklisted(c.name);
       html += `
         <div class="list-row" onclick="openCustomerDetail('${encodeURIComponent(c.name)}')">
           <div>
-            <div class="name">🐻 ${escapeHtml(c.name)} ${isVip ? '<span class="tag">⭐VIP</span>' : ''}${isBl ? '<span class="tag-blacklist">🚫黑名單</span>' : ''}</div>
+            <div class="name">🐻 ${escapeHtml(c.name)} ${isBl ? '<span class="tag-blacklist">🚫黑名單</span>' : ''}</div>
             <div class="meta">買過 ${c.orderCount} 次場次</div>
           </div>
           <div class="summary-total">${money(c.totalSpent)}</div>
@@ -1731,23 +1702,17 @@ renderCustomers();
 renderPrices();
 renderHistory();
 
-/* ---------------- iOS 修正：鍵盤跳出時固定分頁列的位置 ---------------- */
-if(window.visualViewport){
-  const navEl = document.querySelector('nav.tabbar');
-  function fixNavPosition(){
-    const vv = window.visualViewport;
-    const offset = window.innerHeight - vv.height - vv.offsetTop;
-    navEl.style.transform = offset > 0 ? `translateY(-${offset}px)` : '';
-  }
-  window.visualViewport.addEventListener('resize', fixNavPosition);
-  window.visualViewport.addEventListener('scroll', fixNavPosition);
-}
-
 /* ---------------- App 回到前景時，自動關閉殘留的彈窗，確保回到目前場次 ---------------- */
+function resetToForeground(){
+  closeModal();
+}
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
-    closeModal();
+    resetToForeground();
   }
+});
+window.addEventListener('pageshow', function(){
+  resetToForeground();
 });
 </script>
 
