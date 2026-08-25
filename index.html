@@ -651,16 +651,29 @@ function removeFromBlacklist(encName){
   renderSession();
 }
 
-function addProduct(name, priceStr, costStr){
+function addProduct(name, priceStr, costStr, bulkQtyStr, bulkPriceStr){
   name = (name||'').trim();
   const price = parseFloat(priceStr);
   const costParsed = parseFloat(costStr);
   const cost = isNaN(costParsed) ? 0 : costParsed;
+  const bulkQtyParsed = parseInt(bulkQtyStr);
+  const bulkPriceParsed = parseFloat(bulkPriceStr);
+  const bulkQty = (!isNaN(bulkQtyParsed) && bulkQtyParsed > 1) ? bulkQtyParsed : 0;
+  const bulkPrice = (bulkQty && !isNaN(bulkPriceParsed) && bulkPriceParsed >= 0) ? bulkPriceParsed : 0;
   if(!name){ toast('請輸入商品名稱'); return; }
   if(isNaN(price) || price < 0){ toast('請輸入正確的售價'); return; }
-  data.currentTrip.products.unshift({ id: genId(), name, price, cost, createdAt: Date.now() });
+  data.currentTrip.products.unshift({ id: genId(), name, price, cost, bulkQty, bulkPrice, createdAt: Date.now() });
   saveData(); renderSession();
   toast('商品加好囉 ✅');
+}
+
+function computeLineSubtotal(product, qty){
+  if(product.bulkQty && product.bulkPrice && product.bulkQty > 1){
+    const sets = Math.floor(qty / product.bulkQty);
+    const remainder = qty % product.bulkQty;
+    return sets * product.bulkPrice + remainder * product.price;
+  }
+  return qty * product.price;
 }
 
 function addOrder(productId, nameInputId, qtyInputId){
@@ -693,6 +706,49 @@ function deleteProduct(productId){
     data.currentTrip.orders = data.currentTrip.orders.filter(o=>o.productId!==productId);
     saveData(); renderSession();
   });
+}
+
+function editProduct(productId){
+  const trip = data.currentTrip;
+  const product = trip && trip.products.find(p=>p.id===productId);
+  if(!product) return;
+  openModal(`
+    <div class="modal-title">✏️ 編輯商品</div>
+    <div class="row">
+      <input type="text" id="editProdName" value="${escapeHtml(product.name)}" placeholder="商品名稱">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <input type="number" id="editProdPrice" value="${product.price}" placeholder="售價" inputmode="decimal">
+      <input type="number" id="editProdCost" value="${product.cost || ''}" placeholder="成本（選填）" inputmode="decimal">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <input type="number" id="editProdBulkQty" value="${product.bulkQty || ''}" placeholder="件數優惠（選填，例如 2）" inputmode="numeric">
+      <input type="number" id="editProdBulkPrice" value="${product.bulkPrice || ''}" placeholder="優惠總價" inputmode="decimal">
+    </div>
+    <button class="btn-main btn-block" style="margin-top:12px;" onclick="saveEditProduct('${productId}')">儲存</button>
+    <button class="btn-ghost btn-block" style="margin-top:10px;" onclick="closeModal()">取消</button>
+  `);
+}
+function saveEditProduct(productId){
+  const trip = data.currentTrip;
+  const product = trip && trip.products.find(p=>p.id===productId);
+  if(!product) return;
+  const name = document.getElementById('editProdName').value.trim();
+  const price = parseFloat(document.getElementById('editProdPrice').value);
+  const costParsed = parseFloat(document.getElementById('editProdCost').value);
+  const bulkQtyParsed = parseInt(document.getElementById('editProdBulkQty').value);
+  const bulkPriceParsed = parseFloat(document.getElementById('editProdBulkPrice').value);
+  if(!name){ toast('請輸入商品名稱'); return; }
+  if(isNaN(price) || price < 0){ toast('請輸入正確的售價'); return; }
+  product.name = name;
+  product.price = price;
+  product.cost = isNaN(costParsed) ? 0 : costParsed;
+  product.bulkQty = (!isNaN(bulkQtyParsed) && bulkQtyParsed > 1) ? bulkQtyParsed : 0;
+  product.bulkPrice = (product.bulkQty && !isNaN(bulkPriceParsed) && bulkPriceParsed >= 0) ? bulkPriceParsed : 0;
+  saveData();
+  closeModal();
+  renderSession();
+  toast('商品已更新 ✅');
 }
 
 /* ---------------- 刪除顧客 / 商品價格 / 歷史場次 ---------------- */
@@ -743,7 +799,7 @@ function computeTripSummary(trip){
     const product = trip.products.find(p=>p.id===o.productId);
     if(!product) return;
     if(!map[o.customerName]) map[o.customerName] = { items:[], total:0 };
-    const subtotal = product.price * o.qty;
+    const subtotal = computeLineSubtotal(product, o.qty);
     map[o.customerName].items.push({ name: product.name, qty: o.qty, price: product.price, subtotal, orderId: o.id, productId: product.id });
     map[o.customerName].total += subtotal;
   });
@@ -755,7 +811,7 @@ function computeTripFinancials(trip){
   trip.orders.forEach(o=>{
     const product = trip.products.find(p=>p.id===o.productId);
     if(!product) return;
-    revenue += product.price * o.qty;
+    revenue += computeLineSubtotal(product, o.qty);
     costTotal += (product.cost||0) * o.qty;
   });
   const grossProfit = revenue - costTotal;
@@ -783,7 +839,7 @@ function settleTrip(){
       data.customers[name].orderCount += 1;
       data.customers[name].history.unshift({
         tripId: trip.id, tripName: trip.name, date: trip.date, amount: info.total,
-        items: info.items.map(it=>({ name: it.name, qty: it.qty, price: it.price })),
+        items: info.items.map(it=>({ name: it.name, qty: it.qty, price: it.price, subtotal: it.subtotal })),
         note: (trip.customerNotes && trip.customerNotes[name]) || ''
       });
     });
@@ -891,6 +947,10 @@ function renderSession(){
         <input type="number" id="prodPrice" placeholder="售價" inputmode="decimal">
         <input type="number" id="prodCost" placeholder="成本（選填）" inputmode="decimal">
       </div>
+      <div class="row" style="margin-top:8px;">
+        <input type="number" id="prodBulkQty" placeholder="件數優惠（選填，例如 2）" inputmode="numeric">
+        <input type="number" id="prodBulkPrice" placeholder="優惠總價" inputmode="decimal">
+      </div>
       <div class="hint" id="priceHint" style="display:none;"></div>
       <button class="btn-main btn-block" style="margin-top:10px;" onclick="handleAddProduct()">加入商品</button>
       ${productDatalist()}
@@ -915,7 +975,9 @@ function renderSession(){
               <div>
                 <div class="product-price">${money(p.price)}</div>
                 ${p.cost ? `<div style="font-size:11.5px; color:var(--text-soft); text-align:right;">成本 ${money(p.cost)}</div>` : ''}
+                ${p.bulkQty ? `<div style="font-size:11.5px; color:var(--mocha-dark); text-align:right;">${p.bulkQty}件 ${money(p.bulkPrice)}</div>` : ''}
               </div>
+              <button class="btn-ghost btn-sm" onclick="editProduct('${p.id}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
               <button class="btn-ghost btn-sm" onclick="toggleFavoriteProduct('${encodeURIComponent(p.name)}')">${data.favoriteProducts.some(f=>f.name===p.name)?'⭐':'☆'}</button>
               <button class="btn-danger btn-sm" onclick="deleteProduct('${p.id}')">刪除</button>
             </div>
@@ -927,7 +989,7 @@ function renderSession(){
           </div>
           ${orders.map(o=>`
             <div class="order-item">
-              <span>🐻 ${escapeHtml(o.customerName)} × ${o.qty} = ${money(p.price*o.qty)}</span>
+              <span>🐻 ${escapeHtml(o.customerName)} × ${o.qty} = ${money(computeLineSubtotal(p, o.qty))}</span>
               <span class="del" onclick="deleteOrder('${o.id}')">移除</span>
             </div>
           `).join('')}
@@ -1036,10 +1098,14 @@ function handleAddProduct(){
   const name = document.getElementById('prodName').value;
   const price = document.getElementById('prodPrice').value;
   const cost = document.getElementById('prodCost').value;
-  addProduct(name, price, cost);
+  const bulkQty = document.getElementById('prodBulkQty').value;
+  const bulkPrice = document.getElementById('prodBulkPrice').value;
+  addProduct(name, price, cost, bulkQty, bulkPrice);
   document.getElementById('prodName').value='';
   document.getElementById('prodPrice').value='';
   document.getElementById('prodCost').value='';
+  document.getElementById('prodBulkQty').value='';
+  document.getElementById('prodBulkPrice').value='';
   document.getElementById('priceHint').style.display='none';
 }
 
@@ -1116,7 +1182,7 @@ function openCustomerDetail(encName){
           <div style="font-weight:700; color:var(--mocha-dark);">${money(h.amount)}</div>
         </div>
         <div style="font-size:11.5px; color:var(--text-soft); margin-bottom:6px;">${formatDate(h.date)}</div>
-        ${h.items.map(i=>`<div class="history-item"><span>${escapeHtml(i.name)} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join('')}
+        ${h.items.map(i=>`<div class="history-item"><span>${escapeHtml(i.name)} × ${i.qty}</span><span>${money(i.subtotal != null ? i.subtotal : i.price*i.qty)}</span></div>`).join('')}
         ${h.note ? `<div style="margin-top:8px; font-size:12.5px; background:var(--taupe-light); color:var(--mocha-dark); padding:7px 10px; border-radius:10px;">🎁 ${escapeHtml(h.note)}</div>` : ''}
       </div>
     `;
